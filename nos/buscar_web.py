@@ -5,61 +5,58 @@ from typing import Dict, Any
 from dotenv import load_dotenv
 from estado import EstadoReposicao
 
-# Carrega variáveis do arquivo .env
 load_dotenv()
-
 SERPER_API_KEY = os.getenv("SERPER_API_KEY", "")
 
 
 def buscar_fornecedores_web(estado: EstadoReposicao) -> Dict[str, Any]:
     """
-    Nó 2: Realiza busca de empresas e distribuidores via Google Places (Serper API)
-    direcionada para a região de Pindamonhangaba, Taubaté e Vale do Paraíba.
+    Nó 2: Realiza busca de distribuidores via Google Places usando termos comerciais flexíveis.
+    Garante que a pesquisa encontre atacadistas e depósitos na cidade informada pelo usuário.
     """
     nome_produto = estado["nome_produto"]
+    localizacao = estado.get("localizacao_usuario", "").strip() or "São Paulo - SP"
     avisos = list(estado.get("avisos", []))
-    avisos.append(f"Consultando Google Places (Serper) para distribuidores de '{nome_produto}'...")
+    avisos.append(f"Consultando Google Places para '{nome_produto}' em {localizacao}...")
 
-    # Query direcionada para distribuidores/atacado da região
-    query = f"distribuidora atacado {nome_produto} Pindamonhangaba SP"
+    # Extrai o termo principal do produto (ex: "Refrigerante" em vez de "Refrigerante Cola 2L")
+    termo_base = nome_produto.split()[0] if nome_produto else "bebidas"
+
+    queries = [
+        f"distribuidora {termo_base} {localizacao}",
+        f"atacado alimentos bebidas {localizacao}",
+        f"distribuidora atacado {localizacao}",
+    ]
 
     url = "https://google.serper.dev/places"
-    payload = json.dumps({
-        "q": query,
-        "gl": "br",
-        "hl": "pt-br"
-    })
     headers = {
         "X-API-KEY": SERPER_API_KEY,
         "Content-Type": "application/json"
     }
 
-    try:
-        response = requests.post(url, headers=headers, data=payload, timeout=10)
-        if response.status_code == 200:
-            dados = response.json()
-            lugares = dados.get("places", [])
-            
-            # Se não encontrou lugares na primeira busca, tenta query mais ampla no Vale
-            if not lugares:
-                payload_amplo = json.dumps({
-                    "q": f"distribuidora {nome_produto} Vale do Paraíba SP",
-                    "gl": "br",
-                    "hl": "pt-br"
-                })
-                resp_ampla = requests.post(url, headers=headers, data=payload_amplo, timeout=10)
-                if resp_ampla.status_code == 200:
-                    lugares = resp_ampla.json().get("places", [])
+    lugares = []
+    for q in queries:
+        try:
+            payload = json.dumps({"q": q, "gl": "br", "hl": "pt-br"})
+            resp = requests.post(url, headers=headers, data=payload, timeout=8)
+            if resp.status_code == 200:
+                places = resp.json().get("places", [])
+                if places:
+                    lugares.extend(places)
+                    break
+        except Exception as e:
+            avisos.append(f"Aviso de busca: {e}")
 
-            resultados_texto = json.dumps(lugares, ensure_ascii=False, indent=2)
-        else:
-            resultados_texto = f"Erro Serper status {response.status_code}: {response.text}"
-            avisos.append(f"Aviso Serper API: status {response.status_code}")
-    except Exception as e:
-        resultados_texto = f"Erro na requisição Serper: {e}"
-        avisos.append(f"Aviso de conexão com Serper: {str(e)}")
+    # Remove duplicidades
+    vistos = set()
+    lugares_unicos = []
+    for p in lugares:
+        nome = p.get("title")
+        if nome and nome not in vistos:
+            vistos.add(nome)
+            lugares_unicos.append(p)
 
     return {
-        "resultados_web_brutos": resultados_texto,
+        "resultados_web_brutos": json.dumps(lugares_unicos, ensure_ascii=False, indent=2),
         "avisos": avisos,
     }

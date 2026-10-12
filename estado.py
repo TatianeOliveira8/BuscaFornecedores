@@ -1,4 +1,4 @@
-from typing import TypedDict, List, Dict, Any, Optional
+from typing import TypedDict, List, Dict, Any, Optional, Tuple
 
 
 class EstadoReposicao(TypedDict):
@@ -6,6 +6,12 @@ class EstadoReposicao(TypedDict):
     nome_produto: str
     estoque_atual: int
     quantidade_necessaria: int
+
+    # Localização definida pelo usuário (Cidade/UF ou CEP)
+    localizacao_usuario: str
+    coord_origem: Optional[Tuple[float, float]]
+    distancia_maxima_km: float
+    nota_minima: float
 
     # Dados brutos retornados da busca web
     resultados_web_brutos: str
