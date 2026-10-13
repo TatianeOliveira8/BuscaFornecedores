@@ -267,14 +267,13 @@ export default function Home() {
                         </p>
 
                         <div className="mt-3 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs">
-                          <span className="text-emerald-400 font-bold">
-                            R$ {forn.preco_unitario?.toFixed(2)} / un
-                          </span>
                           <span className="text-slate-400">
-                            {forn.distancia_km} km de distância
+                            {forn.distancia_km != null
+                              ? `${forn.distancia_km} km de distância`
+                              : "Distância não informada"}
                           </span>
                           <span className="text-amber-400 flex items-center gap-1">
-                            ★ {forn.nota_media || "N/A"} ({forn.quantidade_avaliacoes})
+                            ★ {forn.nota_media ?? "N/A"} ({forn.quantidade_avaliacoes ?? "N/A"})
                           </span>
                         </div>
                       </div>

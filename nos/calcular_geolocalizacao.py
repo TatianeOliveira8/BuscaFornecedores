@@ -77,12 +77,8 @@ def calcular_geolocalizacao(estado: EstadoReposicao) -> Dict[str, Any]:
             except Exception:
                 distancia = None
 
-        # 2. Se for na mesma cidade digitada pelo usuário, garante distância local viável (ex: 3 a 6 km)
-        if distancia is None or distancia > 150.0:
-            if cidade_usuario_pura in endereco_forn or f.get("cidade", "").lower() == cidade_usuario_pura:
-                distancia = 5.2
-            else:
-                distancia = distancia if distancia is not None else 8.0
+        # Sem coordenadas confiáveis, a distância permanece desconhecida.
+        # Não substitua a distância real por uma estimativa inventada.
 
         f["distancia_km"] = distancia
         fornecedores_com_distancia.append(f)

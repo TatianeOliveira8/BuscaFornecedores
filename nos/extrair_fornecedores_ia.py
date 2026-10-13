@@ -28,8 +28,16 @@ def extrair_fornecedores_ia(estado: EstadoReposicao) -> Dict[str, Any]:
         endereco = p.get("address", localizacao)
         lat = p.get("latitude")
         lon = p.get("longitude")
-        rating = float(p.get("rating") or 4.5)
-        rating_count = int(p.get("ratingCount") or 12)
+        rating = p.get("rating")
+        rating_count = p.get("ratingCount")
+        try:
+            rating = float(rating) if rating is not None else None
+        except (TypeError, ValueError):
+            rating = None
+        try:
+            rating_count = int(rating_count) if rating_count is not None else None
+        except (TypeError, ValueError):
+            rating_count = None
         link = p.get("website") or f"https://www.google.com/maps/search/?api=1&query={requests.utils.quote(nome + ' ' + localizacao)}"
 
         # Descobre a cidade pelo endereço ou usa a digitada
@@ -47,29 +55,16 @@ def extrair_fornecedores_ia(estado: EstadoReposicao) -> Dict[str, Any]:
             "longitude": lon,
             "cidade": cidade_forn,
             "link": link,
-            "preco_unitario": 7.50,
             "quantidade_avaliacoes": rating_count,
             "nota_media": rating,
             "nome_produto": nome_produto,
         })
 
-    # Caso específico onde a API não encontrou nada na busca restrita, gera fornecedor da própria cidade informada
+    # Não inventa um fornecedor quando o Serper não respondeu com locais reais.
     if not fornecedores_base:
-        fornecedores_base = [
-            {
-                "id_fornecedor": 1,
-                "nome_fornecedor": f"Distribuidora de Bebidas {localizacao.split('-')[0].strip()}",
-                "endereco_completo": f"Centro, {localizacao}",
-                "latitude": None,
-                "longitude": None,
-                "cidade": localizacao,
-                "link": f"https://www.google.com/maps/search/?api=1&query={requests.utils.quote('distribuidora atacado ' + localizacao)}",
-                "preco_unitario": 7.50,
-                "quantidade_avaliacoes": 25,
-                "nota_media": 4.7,
-                "nome_produto": nome_produto,
-            }
-        ]
+        avisos.append(
+            f"Nenhum fornecedor real foi retornado pelo Serper para '{localizacao}'."
+        )
 
     return {
         "fornecedores_encontrados": fornecedores_base,

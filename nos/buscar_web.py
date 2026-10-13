@@ -37,14 +37,19 @@ def buscar_fornecedores_web(estado: EstadoReposicao) -> Dict[str, Any]:
     lugares = []
     for q in queries:
         try:
-            payload = json.dumps({"q": q, "gl": "br", "hl": "pt-br"})
-            resp = requests.post(url, headers=headers, data=payload, timeout=8)
+            payload = {"q": q, "gl": "br", "hl": "pt-br"}
+            resp = requests.post(url, headers=headers, json=payload, timeout=8)
             if resp.status_code == 200:
                 places = resp.json().get("places", [])
                 if places:
                     lugares.extend(places)
                     break
-        except Exception as e:
+                avisos.append(f"O Serper não encontrou locais para a busca '{q}'.")
+            else:
+                avisos.append(
+                    f"Serper retornou HTTP {resp.status_code} para a busca '{q}'."
+                )
+        except (requests.RequestException, ValueError) as e:
             avisos.append(f"Aviso de busca: {e}")
 
     # Remove duplicidades

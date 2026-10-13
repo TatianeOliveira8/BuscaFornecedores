@@ -15,18 +15,16 @@ def filtrar_por_distancia(estado: EstadoReposicao) -> Dict[str, Any]:
     if not fornecedores:
         return {"fornecedores_dentro_raio": []}
 
-    df = pd.DataFrame(fornecedores)
-
-    df_validos = df[df["distancia_km"] <= distancia_maxima]
     avisos = list(estado.get("avisos", []))
+    df = pd.DataFrame(fornecedores)
+    if "distancia_km" not in df.columns:
+        return {"fornecedores_dentro_raio": [], "avisos": avisos}
 
-    # Se nenhum fornecedor estritamente coube no raio selecionado (ex: raio de 15 km),
-    # pega os mais próximos disponíveis para não deixar a operação de mãos atadas
+    df_validos = df[df["distancia_km"].notna() & (df["distancia_km"] <= distancia_maxima)]
     if df_validos.empty:
         avisos.append(
-            f"Aviso: nenhum fornecedor encontrado a menos de {distancia_maxima:.0f} km. Exibindo os fornecedores mais próximos da região."
+            f"Nenhum fornecedor com distância conhecida foi encontrado a menos de {distancia_maxima:.0f} km."
         )
-        df_validos = df.sort_values(by="distancia_km", ascending=True).head(5)
 
     return {
         "fornecedores_dentro_raio": df_validos.to_dict(orient="records"),

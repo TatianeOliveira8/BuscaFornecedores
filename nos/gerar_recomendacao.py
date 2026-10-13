@@ -8,7 +8,7 @@ llm = ChatOllama(model="qwen2.5:1.5b", temperature=0)
 def gerar_recomendacao(estado: EstadoReposicao) -> Dict[str, Any]:
     """
     Nó 7: A IA (Qwen 2.5) analisa os fornecedores filtrados e redige um
-    resumo executivo consolidado com a análise de confiabilidade, preço e localização.
+    resumo executivo consolidado com a análise de confiabilidade e localização.
     """
     priorizados = estado.get("fornecedores_priorizados", [])
     avisos = list(estado.get("avisos", []))
@@ -31,10 +31,8 @@ def gerar_recomendacao(estado: EstadoReposicao) -> Dict[str, Any]:
 
     resumo_fornecedores_texto = ""
     for idx, f in enumerate(top_5_fornecedores, 1):
-        total = f["preco_unitario"] * quantidade
         resumo_fornecedores_texto += (
-            f"{idx}. {f['nome_fornecedor']}: Preço R$ {f['preco_unitario']:.2f}/un "
-            f"(Total: R$ {total:.2f}), Distância: {f['distancia_km']} km, "
+            f"{idx}. {f['nome_fornecedor']}: Distância: {f['distancia_km']} km, "
             f"Avaliação: {f.get('nota_media', 'N/A')}★ ({f['quantidade_avaliacoes']} avaliações)\n"
         )
 
@@ -48,7 +46,7 @@ Fornecedores selecionados e ranqueados:
 {resumo_fornecedores_texto}
 
 Elabore um resumo conciso e objetivo:
-1. Destaque o fornecedor principal ({escolhido['nome_fornecedor']}) explicando o equilíbrio entre preço, proximidade e confiabilidade das notas.
+1. Destaque o fornecedor principal ({escolhido['nome_fornecedor']}) explicando o equilíbrio entre proximidade e confiabilidade das notas.
 2. Mencione se as opções alternativas atendem satisfatoriamente como plano B.
 3. Conclua com uma recomendação direta de ação de compra.
 """
@@ -60,7 +58,7 @@ Elabore um resumo conciso e objetivo:
         avisos.append(f"Aviso LLM: {e}")
         relatorio = (
             f"Recomendação Automática: O fornecedor principal selecionado é {escolhido['nome_fornecedor']} "
-            f"ao preço de R$ {escolhido['preco_unitario']:.2f}/unidade e distância de {escolhido['distancia_km']} km "
+            f"a {escolhido['distancia_km']} km de distância "
             f"(Nota: {escolhido.get('nota_media', 'N/A')}★)."
         )
 
