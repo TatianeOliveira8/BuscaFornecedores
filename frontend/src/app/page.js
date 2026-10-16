@@ -46,7 +46,8 @@ export default function Home() {
       formData.append("distancia_maxima_km", distancia);
       formData.append("arquivo_csv", arquivo);
 
-      const resp = await fetch("http://localhost:8000/api/analisar", {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const resp = await fetch(`${apiUrl}/api/analisar`, {
         method: "POST",
         body: formData,
       });
