@@ -4,10 +4,17 @@ import re
 import requests
 from typing import Dict, Any, List
 from html import unescape
-from langchain_ollama import ChatOllama
+from dotenv import load_dotenv
+from langchain_google_genai import ChatGoogleGenerativeAI
 from estado import EstadoReposicao
 
-llm = ChatOllama(model="qwen2.5:1.5b", temperature=0)
+load_dotenv()
+
+llm = ChatGoogleGenerativeAI(
+    model="gemini-2.0-flash",
+    google_api_key=os.getenv("API_KEY"),
+    temperature=0,
+)
 
 
 def investigar_site(url: str, nome_produto: str) -> Dict[str, Any]:
